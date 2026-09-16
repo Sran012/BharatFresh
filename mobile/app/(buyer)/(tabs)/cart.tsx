@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../lib/api";
 import { QuantitySelector } from "../../../components/QuantitySelector";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 
 type CartItem = {
@@ -35,6 +36,7 @@ type Address = {
 };
 
 export default function CartScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -63,12 +65,17 @@ export default function CartScreen() {
   const defaultAddress = addresses.find((a) => a.isDefault) ?? addresses[0];
 
   const updateQuantity = async (itemId: string, newQty: number) => {
-    // Optimistic update
     setItems((prev) =>
       prev.map((item) =>
         item.id === itemId ? { ...item, quantity: newQty } : item
       )
     );
+    try {
+      await api.put(`/cart/items/${itemId}`, { quantity: newQty });
+    } catch {
+      // revert on failure
+      loadData();
+    }
   };
 
   const removeItem = async (itemId: string) => {
@@ -134,9 +141,9 @@ export default function CartScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <Text style={styles.headerTitle}>Checkout</Text>
-        <View style={styles.headerIcon}>
+        <View style={[styles.headerIcon, { top: insets.top + 16 }]}>
           <Ionicons name="clipboard-outline" size={22} color={colors.primary} />
         </View>
       </View>
@@ -186,7 +193,7 @@ export default function CartScreen() {
             <View style={styles.addressHeader}>
               <Ionicons name="location" size={18} color={colors.primary} />
               <Text style={styles.addressLabel}>DELIVERY ADDRESS</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => Alert.alert("Coming soon", "Address management coming soon")}>
                 <Text style={styles.changeBtn}>Change</Text>
               </TouchableOpacity>
             </View>
@@ -267,7 +274,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 56,
     paddingBottom: 12,
     paddingHorizontal: spacing.marginMobile,
     backgroundColor: colors.surfaceContainerLowest,
@@ -279,7 +285,6 @@ const styles = StyleSheet.create({
   headerIcon: {
     position: "absolute",
     right: spacing.marginMobile,
-    top: 56,
   },
   scroll: {
     padding: spacing.marginMobile,

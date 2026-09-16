@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 
 type Address = {
@@ -24,6 +25,7 @@ type Address = {
 };
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const { user, signOut, refreshUser } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [editing, setEditing] = useState(false);
@@ -73,7 +75,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
-      <Text style={styles.screenTitle}>Profile</Text>
+      <Text style={[styles.screenTitle, { paddingTop: insets.top + 16 }]}>Profile</Text>
 
       {/* Avatar + Info */}
       <View style={styles.avatarSection}>
@@ -113,13 +115,13 @@ export default function ProfileScreen() {
 
       {/* Menu Items */}
       <View style={styles.menuSection}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Edit Profile", "Coming soon")}>
           <Ionicons name="person-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuLabel}>Edit Profile</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.outline} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("My Addresses", "Coming soon")}>
           <Ionicons name="location-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuLabel}>My Addresses</Text>
           <View style={styles.menuRight}>
@@ -128,7 +130,7 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Notifications", "Coming soon")}>
           <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuLabel}>Notifications</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.outline} />
@@ -181,7 +183,6 @@ const styles = StyleSheet.create({
   screenTitle: {
     ...typography.headlineLgMobile,
     color: colors.onSurface,
-    paddingTop: 56,
     marginBottom: spacing.stackLg,
   },
   avatarSection: {

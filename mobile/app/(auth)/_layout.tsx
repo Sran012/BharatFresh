@@ -8,6 +8,7 @@ export default function AuthLayout() {
         headerShown: false,
         contentStyle: { backgroundColor: colors.background },
       }}
+      initialRouteName="phone"
     />
   );
 }

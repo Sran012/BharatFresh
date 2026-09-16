@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { withTransaction } from "../db/pool.js";
+import { requireAuth } from "../middleware/auth.js";
 import { distanceFormula } from "../services/orders.js";
 import { asyncHandler, ApiError, ok } from "../utils/http.js";
 import { requireString } from "../utils/validation.js";
@@ -28,6 +29,39 @@ router.get(
       }));
     });
     ok(response, result);
+  }),
+);
+
+router.post(
+  "/",
+  requireAuth,
+  asyncHandler(async (request, response) => {
+    const name = requireString(request.body.name, "name");
+    const category = typeof request.body.category === "string" ? request.body.category : null;
+    const unit = typeof request.body.unit === "string" ? request.body.unit : "kg";
+
+    const result = await withTransaction(async (client) => {
+      const r = await client.query<{ id: string; name: string; category: string | null; unit: string | null; image_url: string | null }>(
+        `INSERT INTO products (name, category, unit) VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING
+         RETURNING id, name, category, unit, image_url`,
+        [name, category, unit],
+      );
+      if (r.rows[0]) return r.rows[0];
+      const existing = await client.query<{ id: string; name: string; category: string | null; unit: string | null; image_url: string | null }>(
+        `SELECT id, name, category, unit, image_url FROM products WHERE name = $1`,
+        [name],
+      );
+      return existing.rows[0];
+    });
+
+    ok(response, {
+      id: result.id,
+      name: result.name,
+      category: result.category,
+      defaultUnit: result.unit ?? "kg",
+      imageUrl: result.image_url,
+    });
   }),
 );
 

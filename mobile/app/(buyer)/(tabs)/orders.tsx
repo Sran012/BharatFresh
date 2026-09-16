@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../lib/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 
 type Order = {
@@ -58,6 +59,7 @@ const statusLabel = (status: string) =>
   status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 export default function OrdersScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +117,7 @@ export default function OrdersScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
-      <Text style={styles.screenTitle}>My Orders</Text>
+      <Text style={[styles.screenTitle, { paddingTop: insets.top + 16 }]}>My Orders</Text>
 
       {/* Active Orders */}
       {activeOrders.length > 0 && (
@@ -249,7 +251,6 @@ const styles = StyleSheet.create({
   screenTitle: {
     ...typography.headlineLgMobile,
     color: colors.onSurface,
-    paddingTop: 56,
     marginBottom: spacing.stackLg,
   },
   section: {

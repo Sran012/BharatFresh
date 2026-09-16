@@ -10,8 +10,10 @@ import {
   Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 import { SearchBar } from "../../../components/SearchBar";
 
@@ -34,7 +36,9 @@ type SellerStats = {
 };
 
 export default function SellerDashboardScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const router = useRouter();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [stats, setStats] = useState<SellerStats>({ todayEarnings: 0, totalOrders: 0 });
   const [loading, setLoading] = useState(true);
@@ -96,7 +100,7 @@ export default function SellerDashboardScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <View style={styles.headerLeft}>
           <Ionicons name="location" size={18} color={colors.primary} />
           <Text style={styles.headerTitle}>Bharat Fresh</Text>
@@ -128,7 +132,9 @@ export default function SellerDashboardScreen() {
       </View>
 
       {/* Search */}
-      <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search your products..." />
+      <View style={{ marginBottom: spacing.stackLg }}>
+        <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search your products..." />
+      </View>
 
       {/* Inventory */}
       <View style={styles.sectionHeader}>
@@ -177,7 +183,7 @@ export default function SellerDashboardScreen() {
       )}
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity style={styles.fab} onPress={() => router.push("/(seller)/inventory")}>
         <Ionicons name="add" size={28} color={colors.onPrimary} />
       </TouchableOpacity>
     </ScrollView>
@@ -192,7 +198,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 56,
     marginBottom: spacing.stackMd,
   },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -210,7 +215,7 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: "row",
     gap: spacing.stackSm,
-    marginBottom: spacing.stackMd,
+    marginBottom: spacing.stackLg,
   },
   statCard: {
     flex: 1,
@@ -237,7 +242,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.stackSm,
+    marginBottom: spacing.stackMd,
   },
   sectionTitle: {
     ...typography.headlineMd,
@@ -262,21 +267,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.md,
-    padding: spacing.stackSm,
+    padding: spacing.stackMd,
     marginBottom: spacing.stackSm,
-    gap: spacing.stackSm,
+    gap: spacing.stackMd,
   },
   inventoryImage: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: radius.md,
     backgroundColor: colors.surfaceContainer,
     justifyContent: "center",
     alignItems: "center",
   },
   productImage: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: radius.md,
   },
   inventoryInfo: { flex: 1 },
@@ -296,7 +301,7 @@ const styles = StyleSheet.create({
   },
   inventoryRight: {
     alignItems: "flex-end",
-    gap: 4,
+    gap: spacing.stackSm,
   },
   stockLabel: {
     ...typography.labelBold,

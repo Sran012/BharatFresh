@@ -19,8 +19,10 @@ function RootLayoutInner() {
       {user ? (
         user.role === "seller" ? (
           <Stack.Screen name="(seller)" />
-        ) : (
+        ) : user.role === "buyer" ? (
           <Stack.Screen name="(buyer)" />
+        ) : (
+          <Stack.Screen name="(auth)" />
         )
       ) : (
         <Stack.Screen name="(auth)" />

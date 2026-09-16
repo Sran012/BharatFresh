@@ -322,7 +322,7 @@ router.put(
         await client.query(
           `
             UPDATE market_request_items
-            SET status = 'assigned'
+            SET status = 'delivered'
             WHERE id = $1
           `,
           [updated.request_item_id],

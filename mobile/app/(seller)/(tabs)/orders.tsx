@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../lib/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 
 type MarketRequest = {
@@ -40,6 +41,7 @@ type SellerOrder = {
 };
 
 export default function SellerOrdersScreen() {
+  const insets = useSafeAreaInsets();
   const [requests, setRequests] = useState<MarketRequest[]>([]);
   const [orders, setOrders] = useState<SellerOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +105,7 @@ export default function SellerOrdersScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.screenTitle}>Orders</Text>
+      <Text style={[styles.screenTitle, { paddingTop: insets.top + 16 }]}>Orders</Text>
 
       {/* Tabs */}
       <View style={styles.tabRow}>
@@ -223,7 +225,6 @@ const styles = StyleSheet.create({
   screenTitle: {
     ...typography.headlineLgMobile,
     color: colors.onSurface,
-    paddingTop: 56,
     marginBottom: spacing.stackMd,
   },
   tabRow: {

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { withTransaction } from "../db/pool.js";
 import { distanceFormula } from "../services/orders.js";
-import { asyncHandler, ok } from "../utils/http.js";
+import { asyncHandler, ApiError, ok } from "../utils/http.js";
 
 const router = Router();
 
@@ -115,6 +115,44 @@ router.get(
       }));
     });
 
+    ok(response, data);
+  }),
+);
+
+router.get(
+  "/:id",
+  asyncHandler(async (request, response) => {
+    const sellerId = request.params.id;
+    const data = await withTransaction(async (client) => {
+      const result = await client.query<{
+        shop_name: string | null;
+        seller_name: string | null;
+        rating: string;
+        service_lat: string | null;
+        service_lng: string | null;
+        phone: string;
+      }>(
+        `
+          SELECT sp.shop_name, u.name AS seller_name, sp.rating, sp.service_lat, sp.service_lng, u.phone
+          FROM seller_profiles sp
+          JOIN users u ON u.id = sp.user_id
+          WHERE sp.id = $1
+        `,
+        [sellerId],
+      );
+      if (!result.rows[0]) {
+        throw new ApiError(404, "Seller not found");
+      }
+      const row = result.rows[0];
+      return {
+        shopName: row.shop_name,
+        sellerName: row.seller_name,
+        rating: Number(row.rating),
+        lat: row.service_lat ? Number(row.service_lat) : null,
+        lng: row.service_lng ? Number(row.service_lng) : null,
+        phone: row.phone,
+      };
+    });
     ok(response, data);
   }),
 );

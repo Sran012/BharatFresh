@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,18 +8,34 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../lib/auth";
+import { api } from "../../lib/api";
 import { colors, typography, spacing, radius } from "../../lib/theme";
 
 export default function OtpScreen() {
   const router = useRouter();
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const { phone: paramPhone } = useLocalSearchParams<{ phone: string }>();
+  const [phone, setPhone] = useState<string | null>(null);
   const { signIn } = useAuth();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const resolved = paramPhone || null;
+    if (resolved) {
+      setPhone(resolved);
+    } else {
+      AsyncStorage.getItem("otp_phone").then((p) => setPhone(p));
+    }
+  }, [paramPhone]);
+
   const handleVerify = async () => {
+    if (!phone) {
+      Alert.alert("Error", "Phone number missing. Go back and try again.");
+      return;
+    }
     if (code.length < 6) {
       Alert.alert("Error", "Enter the 6-digit OTP");
       return;
@@ -73,7 +89,15 @@ export default function OtpScreen() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.resend}>
+        <TouchableOpacity style={styles.resend} onPress={async () => {
+          if (!phone) return;
+          try {
+            await api.post("/auth/send-otp", { phone });
+            Alert.alert("Sent", "A new OTP has been sent.");
+          } catch (err: any) {
+            Alert.alert("Error", err.message);
+          }
+        }}>
           <Text style={styles.resendText}>
             Didn't receive the code?{" "}
             <Text style={styles.resendLink}>Resend</Text>

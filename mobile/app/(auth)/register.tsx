@@ -43,7 +43,7 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>Complete Profile</Text>
       <Text style={styles.subtitle}>Tell us about yourself</Text>
 

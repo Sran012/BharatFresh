@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../lib/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 
 type OrderDetail = {
@@ -58,6 +59,7 @@ const statusLabel = (status: string) =>
   status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 export default function OrderDetailScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -98,7 +100,7 @@ export default function OrderDetailScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
         </TouchableOpacity>
@@ -235,7 +237,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 56,
     paddingBottom: 12,
     paddingHorizontal: spacing.marginMobile,
     backgroundColor: colors.surfaceContainerLowest,

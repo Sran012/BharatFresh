@@ -15,24 +15,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { api } from "../../../lib/api";
 import { useLocation } from "../../../lib/useLocation";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 import { SearchBar } from "../../../components/SearchBar";
 
 type Vendor = {
   sellerId: string;
   userId: string;
-  shopName: string;
-  sellerName: string;
+  shopName: string | null;
+  sellerName: string | null;
+  serviceLat: number | null;
+  serviceLng: number | null;
   distanceKm: number;
   rating: number;
-  lat: number;
-  lng: number;
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH * 0.75;
 
 export default function MapScreen() {
+  const insets = useSafeAreaInsets();
   const { location, loading: locLoading } = useLocation();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export default function MapScreen() {
   }, [loadVendors]);
 
   const filtered = vendors.filter((v) =>
-    v.shopName.toLowerCase().includes(searchQuery.toLowerCase())
+    v.shopName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const initialRegion = {
@@ -81,7 +83,7 @@ export default function MapScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <View style={styles.headerLeft}>
           <Ionicons name="menu" size={24} color={colors.onSurface} />
           <Text style={styles.headerTitle}>Bharat Fresh</Text>
@@ -127,14 +129,14 @@ export default function MapScreen() {
         {filtered.map((vendor) => (
           <Marker
             key={vendor.sellerId}
-            coordinate={{ latitude: vendor.lat, longitude: vendor.lng }}
+            coordinate={{ latitude: vendor.serviceLat ?? 28.6139, longitude: vendor.serviceLng ?? 77.2090 }}
             onPress={() => router.push(`/(buyer)/vendor/${vendor.sellerId}`)}
           >
             <View style={styles.markerContainer}>
               <View style={styles.markerIcon}>
                 <Ionicons name="leaf" size={16} color={colors.onPrimary} />
               </View>
-              <Text style={styles.markerLabel}>{vendor.shopName}</Text>
+              <Text style={styles.markerLabel}>{vendor.shopName ?? "Vendor"}</Text>
             </View>
           </Marker>
         ))}
@@ -163,7 +165,7 @@ export default function MapScreen() {
                 )}
               </View>
               <View style={styles.cardContent}>
-                <Text style={styles.cardName}>{vendor.shopName}</Text>
+                <Text style={styles.cardName}>{vendor.shopName ?? "Vendor"}</Text>
                 <View style={styles.cardBadges}>
                   <View style={styles.farmBadge}>
                     <Text style={styles.farmBadgeText}>Direct from Farm</Text>
@@ -198,7 +200,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: spacing.marginMobile,
-    paddingTop: 56,
     paddingBottom: spacing.stackSm,
     backgroundColor: colors.surfaceContainerLowest,
   },

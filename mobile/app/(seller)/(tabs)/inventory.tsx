@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../../lib/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 import { SearchBar } from "../../../components/SearchBar";
 
@@ -40,6 +41,7 @@ type Product = {
 };
 
 export default function SellerInventoryScreen() {
+  const insets = useSafeAreaInsets();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,8 @@ export default function SellerInventoryScreen() {
   const [newPrice, setNewPrice] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newUnit, setNewUnit] = useState("kg");
+  const [isCustom, setIsCustom] = useState(false);
+  const [customName, setCustomName] = useState("");
 
   const loadInventory = useCallback(async () => {
     try {
@@ -75,24 +79,51 @@ export default function SellerInventoryScreen() {
   };
 
   const handleAdd = async () => {
-    if (!newProductId || !newPrice || !newStock) {
-      Alert.alert("Error", "Fill all fields");
-      return;
-    }
-    try {
-      await api.post("/seller/inventory", {
-        productId: newProductId,
-        price: Number(newPrice),
-        stockQty: Number(newStock),
-        unit: newUnit,
-      });
-      setShowAdd(false);
-      setNewProductId("");
-      setNewPrice("");
-      setNewStock("");
-      loadInventory();
-    } catch (err: any) {
-      Alert.alert("Error", err.message);
+    if (isCustom) {
+      if (!customName.trim() || !newPrice || !newStock) {
+        Alert.alert("Error", "Fill all fields");
+        return;
+      }
+      try {
+        const product = await api.post<{ id: string; name: string; defaultUnit: string }>("/products", {
+          name: customName.trim(),
+          unit: newUnit,
+        });
+        await api.post("/seller/inventory", {
+          productId: product.id,
+          price: Number(newPrice),
+          stockQty: Number(newStock),
+          unit: newUnit,
+        });
+        setShowAdd(false);
+        setCustomName("");
+        setIsCustom(false);
+        setNewPrice("");
+        setNewStock("");
+        loadInventory();
+      } catch (err: any) {
+        Alert.alert("Error", err.message);
+      }
+    } else {
+      if (!newProductId || !newPrice || !newStock) {
+        Alert.alert("Error", "Fill all fields");
+        return;
+      }
+      try {
+        await api.post("/seller/inventory", {
+          productId: newProductId,
+          price: Number(newPrice),
+          stockQty: Number(newStock),
+          unit: newUnit,
+        });
+        setShowAdd(false);
+        setNewProductId("");
+        setNewPrice("");
+        setNewStock("");
+        loadInventory();
+      } catch (err: any) {
+        Alert.alert("Error", err.message);
+      }
     }
   };
 
@@ -148,9 +179,11 @@ export default function SellerInventoryScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.screenTitle}>Inventory</Text>
+      <Text style={[styles.screenTitle, { paddingTop: insets.top + 16 }]}>Inventory</Text>
 
-      <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search inventory..." />
+      <View style={{ marginBottom: spacing.stackLg }}>
+        <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search inventory..." />
+      </View>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Your Products</Text>
@@ -209,18 +242,39 @@ export default function SellerInventoryScreen() {
 
             <Text style={styles.fieldLabel}>Product</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.productPicker}>
+              <TouchableOpacity
+                style={[styles.productChip, isCustom && styles.productChipActive]}
+                onPress={() => { setIsCustom(true); setNewProductId(""); }}
+              >
+                <Text style={[styles.productChipText, isCustom && styles.productChipTextActive]}>
+                  ✏️ Custom
+                </Text>
+              </TouchableOpacity>
               {products.map((p) => (
                 <TouchableOpacity
                   key={p.id}
-                  style={[styles.productChip, newProductId === p.id && styles.productChipActive]}
-                  onPress={() => { setNewProductId(p.id); setNewUnit(p.defaultUnit); }}
+                  style={[styles.productChip, !isCustom && newProductId === p.id && styles.productChipActive]}
+                  onPress={() => { setNewProductId(p.id); setIsCustom(false); setNewUnit(p.defaultUnit); }}
                 >
-                  <Text style={[styles.productChipText, newProductId === p.id && styles.productChipTextActive]}>
+                  <Text style={[styles.productChipText, !isCustom && newProductId === p.id && styles.productChipTextActive]}>
                     {p.name}
                   </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
+
+            {isCustom && (
+              <>
+                <Text style={styles.fieldLabel}>Product Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={customName}
+                  onChangeText={setCustomName}
+                  placeholder="Enter product name"
+                  placeholderTextColor={colors.outline}
+                />
+              </>
+            )}
 
             <Text style={styles.fieldLabel}>Price (₹)</Text>
             <TextInput
@@ -265,14 +319,13 @@ const styles = StyleSheet.create({
   screenTitle: {
     ...typography.headlineLgMobile,
     color: colors.onSurface,
-    paddingTop: 56,
     marginBottom: spacing.stackMd,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.stackSm,
+    marginBottom: spacing.stackMd,
   },
   sectionTitle: { ...typography.headlineMd, color: colors.onSurface },
   addBtn: {
@@ -290,25 +343,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.md,
-    padding: spacing.stackSm,
+    padding: spacing.stackMd,
     marginBottom: spacing.stackSm,
-    gap: spacing.stackSm,
+    gap: spacing.stackMd,
   },
   inventoryImage: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: radius.md,
     backgroundColor: colors.surfaceContainer,
     justifyContent: "center",
     alignItems: "center",
   },
-  productImage: { width: 48, height: 48, borderRadius: radius.md },
+  productImage: { width: 56, height: 56, borderRadius: radius.md },
   inventoryInfo: { flex: 1 },
   productName: { ...typography.bodyLg, color: colors.onSurface, fontWeight: "600" },
   productMeta: { ...typography.bodySm, color: colors.onSurfaceVariant },
   productPrice: { ...typography.labelBold, color: colors.primary, marginTop: 2 },
   stockQty: { ...typography.bodySm, color: colors.onSurfaceVariant },
-  inventoryRight: { alignItems: "flex-end", gap: 4 },
+  inventoryRight: { alignItems: "flex-end", gap: spacing.stackSm },
   stockLabel: { ...typography.labelBold, color: "#2e7d32", fontSize: 10 },
   stockLabelOff: { color: colors.error },
   deleteBtn: { padding: 6 },
@@ -340,10 +393,10 @@ const styles = StyleSheet.create({
   fieldLabel: {
     ...typography.bodySm,
     color: colors.onSurfaceVariant,
-    marginBottom: 6,
-    marginTop: spacing.stackSm,
+    marginBottom: spacing.stackSm,
+    marginTop: spacing.stackMd,
   },
-  productPicker: { marginBottom: spacing.stackSm },
+  productPicker: { marginBottom: spacing.stackMd },
   productChip: {
     backgroundColor: colors.surfaceContainer,
     borderRadius: radius.full,

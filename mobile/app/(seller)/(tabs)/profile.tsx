@@ -9,9 +9,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../../lib/auth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 
 export default function SellerProfileScreen() {
+  const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
 
   const handleLogout = () => {
@@ -23,7 +25,7 @@ export default function SellerProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.screenTitle}>Profile</Text>
+      <Text style={[styles.screenTitle, { paddingTop: insets.top + 16 }]}>Profile</Text>
 
       {/* Avatar + Info */}
       <View style={styles.avatarSection}>
@@ -40,22 +42,17 @@ export default function SellerProfileScreen() {
 
       {/* Menu */}
       <View style={styles.menuSection}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Edit Profile", "Coming soon")}>
           <Ionicons name="person-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuLabel}>Edit Profile</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.outline} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Shop Settings", "Coming soon")}>
           <Ionicons name="storefront-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuLabel}>Shop Settings</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.outline} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="wallet-outline" size={20} color={colors.onSurface} />
-          <Text style={styles.menuLabel}>Payment History</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.outline} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Help & Support", "Coming soon")}>
           <Ionicons name="help-circle-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuLabel}>Help & Support</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.outline} />
@@ -77,7 +74,6 @@ const styles = StyleSheet.create({
   screenTitle: {
     ...typography.headlineLgMobile,
     color: colors.onSurface,
-    paddingTop: 56,
     marginBottom: spacing.stackLg,
   },
   avatarSection: {

@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { api } from "../../../lib/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, radius } from "../../../lib/theme";
 
 type VendorInfo = {
@@ -34,6 +35,7 @@ type VendorProduct = {
 };
 
 export default function VendorDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [vendor, setVendor] = useState<VendorInfo | null>(null);
   const [products, setProducts] = useState<VendorProduct[]>([]);
@@ -41,12 +43,21 @@ export default function VendorDetailScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const [vendorData, productsData] = await Promise.all([
-        api.get<VendorInfo>(`/sellers/${id}`),
-        api.get<VendorProduct[]>(`/products/seller/${id}`),
+      const [inventoryData] = await Promise.all([
+        api.get<VendorProduct[]>(`/sellers/${id}/inventory`),
       ]);
-      setVendor(vendorData);
-      setProducts(productsData);
+      if (inventoryData.length > 0) {
+        setVendor({
+          shopName: inventoryData[0].shopName ?? "Shop",
+          sellerName: "",
+          distanceKm: 0,
+          rating: 0,
+          lat: 0,
+          lng: 0,
+          phone: "",
+        });
+      }
+      setProducts(inventoryData);
     } catch {
       // silent
     } finally {
@@ -69,7 +80,7 @@ export default function VendorDetailScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
         </TouchableOpacity>
@@ -106,7 +117,11 @@ export default function VendorDetailScreen() {
           <TouchableOpacity
             key={product.productId}
             style={styles.productCard}
-            onPress={() => router.push(`/(buyer)/vendor/${id}`)}
+            onPress={async () => {
+              try {
+                await api.post("/cart/items", { productId: product.productId, quantity: 1, unit: product.unit });
+              } catch {}
+            }}
           >
             <View style={styles.productImage}>
               {product.imageUrl ? (
@@ -138,7 +153,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 56,
     marginBottom: spacing.stackMd,
   },
   headerTitle: { ...typography.headlineMd, color: colors.onSurface },

@@ -4,10 +4,12 @@ import {
   Text,
   ScrollView,
   FlatList,
+  TouchableOpacity,
   StyleSheet,
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { api } from "../../../lib/api";
 import { useLocation } from "../../../lib/useLocation";
 import { SearchBar } from "../../../components/SearchBar";
@@ -43,6 +45,7 @@ type Vendor = {
 
 export default function HomeScreen() {
   const { location } = useLocation();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [products, setProducts] = useState<Product[]>([]);
@@ -108,9 +111,9 @@ export default function HomeScreen() {
       <View style={styles.hero}>
         <View style={styles.heroContent}>
           <Text style={styles.heroTitle}>Fresh from local farms to your home</Text>
-          <View style={styles.heroBtn}>
+          <TouchableOpacity style={styles.heroBtn} onPress={() => router.push("/(buyer)/home")}>
             <Text style={styles.heroBtnText}>Order Now</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -140,6 +143,7 @@ export default function HomeScreen() {
                 rating={v.rating}
                 distance={`${v.distanceKm.toFixed(1)} km`}
                 tag="Direct from Farm"
+                onPress={() => router.push(`/(buyer)/vendor/${v.sellerId}`)}
               />
             ))
           )}

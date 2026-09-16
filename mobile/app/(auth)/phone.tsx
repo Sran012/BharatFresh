@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../lib/api";
 import { colors, typography, spacing, radius } from "../../lib/theme";
 
@@ -30,6 +31,7 @@ export default function PhoneScreen() {
     try {
       const formatted = trimmed.startsWith("+") ? trimmed : `+91${trimmed}`;
       await api.post("/auth/send-otp", { phone: formatted });
+      await AsyncStorage.setItem("otp_phone", formatted);
       router.push({ pathname: "/(auth)/otp", params: { phone: formatted } });
     } catch (err: any) {
       Alert.alert("Error", err.message);
