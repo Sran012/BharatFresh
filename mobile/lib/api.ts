@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE_URL = "http://192.168.0.147:4000/api";
+const BASE_URL = "http://192.168.1.35:4000/api";
 
 type OnUnauthorized = () => void;
 
