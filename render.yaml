@@ -22,3 +22,5 @@ services:
         value: 20
       - key: DB_SSL_ALLOW_SELF_SIGNED
         value: true
+      - key: RUN_MIGRATIONS
+        value: true
