@@ -6,3 +6,4 @@ server/.env
 
 mobile/.claude
 mobile/.expo
+mobile/.env

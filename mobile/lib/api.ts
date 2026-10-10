@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE_URL = "http://192.168.1.35:4000/api";
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? "https://bharatfresh.onrender.com/api";
 
 type OnUnauthorized = () => void;
 
@@ -41,11 +42,24 @@ class ApiClient {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    let res: Response;
+    try {
+      res = await fetch(`${BASE_URL}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`Cannot reach server at ${BASE_URL} (timeout)`);
+      }
+      throw new Error(`Cannot reach server at ${BASE_URL}: ${error instanceof Error ? error.message : "network error"}`);
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const json = await res.json();
 
